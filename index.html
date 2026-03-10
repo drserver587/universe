@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Our Universe</title>
+  <style>
+    /* THE VIEWPORT & DEEP SPACE GRADIENT */
+    body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; background: linear-gradient(180deg, #0d0e23 0%, #241846 100%); overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: white; user-select: none; }
+    
+    #viewport { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; cursor: grab; background-image: radial-gradient(1px 1px at 40px 60px, rgba(255,255,255,0.6), rgba(0,0,0,0)), radial-gradient(1px 1px at 120px 140px, rgba(255,255,255,0.6), rgba(0,0,0,0)), radial-gradient(1px 1px at 200px 30px, rgba(255,255,255,0.6), rgba(0,0,0,0)), radial-gradient(1.5px 1.5px at 280px 190px, rgba(255,255,255,0.8), rgba(0,0,0,0)), radial-gradient(1.5px 1.5px at 360px 80px, rgba(255,255,255,0.8), rgba(0,0,0,0)); background-size: 400px 400px; }
+    #viewport:active { cursor: grabbing; }
+    
+    #universe { position: absolute; top: 0; left: 0; width: 0; height: 0; transform-origin: 0 0; }
+    
+    #header { position: fixed; top: 50px; left: 50%; transform: translateX(-50%); text-align: center; z-index: 50; pointer-events: none; }
+    #header h1 { color: #d790eb; font-family: 'Consolas', 'Courier New', monospace; font-weight: normal; letter-spacing: 4px; margin: 0 0 10px 0; font-size: 3rem; text-shadow: 0 0 20px rgba(215, 144, 235, 0.4); }
+    #header p { color: #a49fc4; margin: 0; font-size: 1rem; letter-spacing: 1px; }
+    
+    .star { width: 12px; height: 12px; background-color: #fff; border-radius: 50%; position: absolute; cursor: grab; box-shadow: 0 0 10px #fff, 0 0 20px #eec4ff, 0 0 40px #d790eb; transition: box-shadow 0.2s; }
+    .star:active { cursor: grabbing; transform: scale(1.4); box-shadow: 0 0 20px #fff, 0 0 40px #eec4ff, 0 0 60px #d790eb; }
+    
+    .star-info { opacity: 0; visibility: hidden; position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%) translateY(10px); background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); padding: 15px; border-radius: 12px; width: max-content; max-width: 280px; pointer-events: none; text-align: center; z-index: 10; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+    .star:hover .star-info { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+    .star-title { font-weight: bold; font-size: 1.1em; margin-bottom: 5px; color: #fff;}
+    .star-date { font-size: 0.8em; color: #d790eb; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;}
+    .star-desc { font-size: 0.9em; white-space: normal; line-height: 1.5; color: #e2e8f0;}
+    
+    #add-btn { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: #7a73d1; color: white; border-radius: 50%; font-size: 35px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 0 20px rgba(122, 115, 209, 0.5); transition: transform 0.2s; z-index: 100; }
+    #add-btn:hover { transform: scale(1.1); }
+    
+    #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 900; }
+    .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #191436; padding: 30px; border-radius: 12px; border: 1px solid #3f3170; box-shadow: 0 0 40px rgba(0,0,0,0.9); z-index: 1000; width: 320px; }
+    .modal h2 { margin-top: 0; text-align: center; color: #d790eb; }
+    .modal input, .modal textarea { width: 100%; margin-bottom: 15px; padding: 12px; border: 1px solid #3f3170; border-radius: 6px; box-sizing: border-box; background: #0d0e23; color: white; font-family: inherit; }
+    ::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+    
+    .btn-group { display: flex; gap: 10px; }
+    .btn { flex: 1; padding: 12px; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+    .btn-primary { background: #7a73d1; color: white; }
+    .btn-primary:hover { background: #928bf2; }
+    .btn-danger { background: transparent; border: 1px solid #ef4444; color: #ef4444; }
+    .btn-danger:hover { background: rgba(239, 68, 68, 0.1); }
+
+    /* LOGIN SCREEN STYLES */
+    #login-screen {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: linear-gradient(180deg, #0d0e23 0%, #241846 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 9999;
+    }
+    .login-box {
+      background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.2); padding: 40px; border-radius: 16px;
+      text-align: center; width: 300px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+    }
+    .login-box h1 { color: #d790eb; font-family: 'Consolas', monospace; margin-top: 0; }
+    .login-box input { width: 100%; margin-bottom: 15px; padding: 12px; border: 1px solid #3f3170; border-radius: 6px; box-sizing: border-box; background: rgba(0,0,0,0.3); color: white; }
+    #logout-btn { position: fixed; top: 20px; right: 20px; z-index: 100; background: transparent; border: 1px solid #7a73d1; color: #7a73d1; padding: 8px 16px; border-radius: 6px; cursor: pointer; display: none; }
+    #logout-btn:hover { background: rgba(122, 115, 209, 0.2); }
+  </style>
+</head>
+<body>
+
+  <div id="login-screen">
+    <div class="login-box">
+      <h1>Our Universe</h1>
+      <p style="color: #a49fc4; margin-bottom: 20px;">Please sign in to view your memories.</p>
+      <input type="email" id="login-email" placeholder="Email">
+      <input type="password" id="login-password" placeholder="Password">
+      <button class="btn btn-primary" style="width: 100%" onclick="window.attemptLogin()">Enter Universe</button>
+      <p id="login-error" style="color: #ef4444; font-size: 0.9em; display: none; margin-top:10px;">Incorrect login.</p>
+    </div>
+  </div>
+
+  <button id="logout-btn" onclick="window.attemptLogout()">Log Out</button>
+
+  <div id="header">
+    <h1>Our Universe</h1>
+    <p>Where every star holds a memory</p>
+  </div>
+
+  <div id="viewport">
+    <div id="universe"></div>
+  </div>
+
+  <div id="add-btn" onclick="window.openAddModal()">+</div>
+  <div id="overlay" onclick="window.closeModals()"></div>
+
+  <div id="add-modal" class="modal">
+    <h2>Log a Memory</h2>
+    <input type="text" id="add-title" placeholder="Event Title (e.g., First Kiss)">
+    <input type="date" id="add-date">
+    <textarea id="add-desc" rows="3" placeholder="Describe the moment..."></textarea>
+    <button class="btn btn-primary" style="width:100%" onclick="window.createStar()">Spawn Star</button>
+  </div>
+
+  <div id="edit-modal" class="modal">
+    <h2>Edit Memory</h2>
+    <input type="text" id="edit-title">
+    <input type="date" id="edit-date">
+    <textarea id="edit-desc" rows="3"></textarea>
+    <div class="btn-group">
+      <button class="btn btn-danger" onclick="window.deleteStar()">Delete</button>
+      <button class="btn btn-primary" onclick="window.saveEdit()">Save</button>
+    </div>
+  </div>
+
+  <script type="module">
+    // Import all required Firebase v12.10.0 functions
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-analytics.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+    // Your actual Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCSasbwiCSF4xu_ecmGjdzwWfZCSMk5s6o",
+      authDomain: "our-universe-c9ab3.firebaseapp.com",
+      projectId: "our-universe-c9ab3",
+      storageBucket: "our-universe-c9ab3.firebasestorage.app",
+      messagingSenderId: "13606024722",
+      appId: "1:13606024722:web:aa4d8de05087fe2b268acb",
+      measurementId: "G-S8FM78F8FM"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // DOM Elements
+    const viewport = document.getElementById('viewport');
+    const universe = document.getElementById('universe');
+    const loginScreen = document.getElementById('login-screen');
+    const logoutBtn = document.getElementById('logout-btn');
+    
+    let currentEditingId = null; 
+
+    // --- AUTHENTICATION LOGIC ---
+    window.attemptLogin = () => {
+      const email = document.getElementById('login-email').value;
+      const pass = document.getElementById('login-password').value;
+      signInWithEmailAndPassword(auth, email, pass)
+        .catch(err => { document.getElementById('login-error').style.display = 'block'; });
+    };
+
+    window.attemptLogout = () => signOut(auth);
+
+    // Listen for Login/Logout state
+    let dbUnsubscribe = null;
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        loginScreen.style.display = 'none';
+        logoutBtn.style.display = 'block';
+        loadUniverse(); // Fetch stars!
+      } else {
+        loginScreen.style.display = 'flex';
+        logoutBtn.style.display = 'none';
+        universe.innerHTML = ''; // Clear stars from screen
+        if (dbUnsubscribe) dbUnsubscribe(); // Stop listening to DB
+      }
+    });
+
+    // --- DATABASE SYNCING LOGIC ---
+    function loadUniverse() {
+      const starsRef = collection(db, "stars");
+      dbUnsubscribe = onSnapshot(starsRef, (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+          const data = change.doc.data();
+          const id = change.doc.id;
+
+          if (change.type === "added") {
+            renderStarDOM(id, data);
+          }
+          if (change.type === "modified") {
+            const star = document.getElementById(id);
+            if (star) {
+              star.style.left = data.x + 'px';
+              star.style.top = data.y + 'px';
+              star.dataset.title = data.title;
+              star.dataset.date = data.date;
+              star.dataset.desc = data.desc;
+              star.innerHTML = generateStarHTML(data);
+            }
+          }
+          if (change.type === "removed") {
+            const star = document.getElementById(id);
+            if (star) star.remove();
+          }
+        });
+      });
+    }
+
+    // --- DOM RENDERING & PANNING ---
+    let isPanning = false; let panStartX, panStartY; let universeX = 0, universeY = 0; 
+    
+    viewport.addEventListener('mousedown', (e) => {
+      if (e.target !== viewport && e.target !== universe) return;
+      isPanning = true; panStartX = e.clientX - universeX; panStartY = e.clientY - universeY;
+    });
+    
+    window.addEventListener('mousemove', (e) => {
+      if (!isPanning) return;
+      universeX = e.clientX - panStartX; universeY = e.clientY - panStartY;
+      universe.style.transform = `translate(${universeX}px, ${universeY}px)`;
+      viewport.style.backgroundPosition = `${universeX * 0.5}px ${universeY * 0.5}px`;
+    });
+    
+    window.addEventListener('mouseup', () => isPanning = false);
+
+    function generateStarHTML(data) {
+      return `<div class="star-info"><div class="star-title">${data.title}</div><div class="star-date">${data.date}</div><div class="star-desc">${data.desc}</div></div>`;
+    }
+
+    function renderStarDOM(id, data) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      star.id = id; 
+      star.style.left = data.x + 'px';
+      star.style.top = data.y + 'px';
+      star.dataset.title = data.title;
+      star.dataset.date = data.date;
+      star.dataset.desc = data.desc;
+      star.innerHTML = generateStarHTML(data);
+      makeDraggable(star, id);
+      universe.appendChild(star);
+    }
+
+    // --- CREATING, EDITING & DELETING (Firebase Writes) ---
+    window.openAddModal = () => { document.getElementById('add-modal').style.display = 'block'; document.getElementById('overlay').style.display = 'block'; }
+    window.closeModals = () => { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); document.getElementById('overlay').style.display = 'none'; currentEditingId = null; }
+
+    window.createStar = async () => {
+      const title = document.getElementById('add-title').value;
+      const date = document.getElementById('add-date').value;
+      const desc = document.getElementById('add-desc').value;
+      if (!title || !date) return alert('Title and date required!');
+
+      // Save to Firebase
+      await addDoc(collection(db, "stars"), {
+        title: title, date: date, desc: desc,
+        x: (window.innerWidth / 2) - universeX,
+        y: (window.innerHeight / 2) - universeY
+      });
+      
+      document.getElementById('add-title').value = '';
+      document.getElementById('add-date').value = '';
+      document.getElementById('add-desc').value = '';
+      window.closeModals();
+    };
+
+    window.saveEdit = async () => {
+      if (!currentEditingId) return;
+      await updateDoc(doc(db, "stars", currentEditingId), {
+        title: document.getElementById('edit-title').value,
+        date: document.getElementById('edit-date').value,
+        desc: document.getElementById('edit-desc').value
+      });
+      window.closeModals();
+    };
+
+    window.deleteStar = async () => {
+      if (!currentEditingId) return;
+      if (confirm("Delete this memory forever?")) {
+        await deleteDoc(doc(db, "stars", currentEditingId));
+        window.closeModals();
+      }
+    };
+
+    // --- DRAGGING (Syncs to Firebase on Drop) ---
+    function makeDraggable(star, docId) {
+      let isDragging = false; let hasMoved = false;
+      let offsetX, offsetY; let startMouseX, startMouseY;
+
+      star.addEventListener('mousedown', (e) => {
+        isDragging = true; hasMoved = false; startMouseX = e.clientX; startMouseY = e.clientY;
+        e.stopPropagation(); 
+        const rect = star.getBoundingClientRect();
+        offsetX = e.clientX - rect.left; offsetY = e.clientY - rect.top;
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        if (Math.abs(e.clientX - startMouseX) > 3 || Math.abs(e.clientY - startMouseY) > 3) hasMoved = true;
+        const newX = e.clientX - universeX - offsetX;
+        const newY = e.clientY - universeY - offsetY;
+        star.style.left = newX + 'px'; star.style.top = newY + 'px';
+      });
+
+      window.addEventListener('mouseup', async () => {
+        if (isDragging) {
+          isDragging = false;
+          if (!hasMoved) {
+            // It was a click! Open Edit Modal.
+            currentEditingId = docId;
+            document.getElementById('edit-title').value = star.dataset.title;
+            document.getElementById('edit-date').value = star.dataset.date;
+            document.getElementById('edit-desc').value = star.dataset.desc;
+            document.getElementById('edit-modal').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+          } else {
+            // It was a drag! Save new coordinates to Firebase.
+            await updateDoc(doc(db, "stars", docId), {
+              x: parseFloat(star.style.left),
+              y: parseFloat(star.style.top)
+            });
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
